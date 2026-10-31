@@ -1,6 +1,6 @@
 [package]
 name = "truenas-exporter"
-version = "0.5.8"
+version = "0.5.9"
 edition = "2021"
 authors = ["Satyasheel"]
 description = "Prometheus exporter for TrueNAS Scale metrics"
