@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.10](https://github.com/bodhispace-xyz/truenas-exporter-rs/compare/truenas-exporter-rs-v0.5.9...truenas-exporter-rs-v0.5.10) (2026-11-03)
+
+
+### Bug Fixes
+
+* **release:** preserve locked tooling and pin publication source ([9068962](https://github.com/bodhispace-xyz/truenas-exporter-rs/commit/906896292a07761a22b5400fb7f8dad44579367e))
+* **release:** publish tagged artifacts directly from Release Please ([a2ba29f](https://github.com/bodhispace-xyz/truenas-exporter-rs/commit/a2ba29fe86a2e9f5d8350ce6e2def6facdcbed8b))
+* **release:** publish tagged artifacts directly from Release Please ([118f968](https://github.com/bodhispace-xyz/truenas-exporter-rs/commit/118f9680424c4b561de3ed79523ff0149a283353))
+
 ## [0.5.9](https://github.com/bodhispace-xyz/truenas-exporter-rs/compare/truenas-exporter-rs-v0.5.8...truenas-exporter-rs-v0.5.9) (2026-08-24)
 
 
