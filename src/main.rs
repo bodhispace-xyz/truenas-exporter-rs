@@ -20,16 +20,20 @@ struct Args {
     truenas_api_key: Option<String>,
 
     /// Port to listen on for metrics
-    #[arg(short, long, env = "EXPORTER_PORT", default_value = "9100")]
-    port: u16,
+    #[arg(short, long, env = "EXPORTER_PORT")]
+    port: Option<u16>,
 
     /// Address to bind to
-    #[arg(short, long, env = "EXPORTER_ADDR", default_value = "0.0.0.0")]
-    addr: String,
+    #[arg(short, long, env = "EXPORTER_ADDR")]
+    addr: Option<String>,
 }
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 2)]
 async fn main() -> Result<()> {
+    // Load dotenv before clap reads its environment aliases. Config::load also
+    // supports dotenv for library callers; neither load overwrites process variables.
+    dotenvy::dotenv().ok();
+
     // Initialize tracing
     tracing_subscriber::registry()
         .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
@@ -54,8 +58,12 @@ async fn main() -> Result<()> {
     if let Some(api_key) = args.truenas_api_key {
         config.truenas.api_key = secrecy::SecretString::new(api_key.into());
     }
-    config.server.port = args.port;
-    config.server.addr = args.addr;
+    if let Some(port) = args.port {
+        config.server.port = port;
+    }
+    if let Some(addr) = args.addr {
+        config.server.addr = addr;
+    }
 
     info!("Configuration loaded successfully");
     info!("TrueNAS host: {}", config.truenas.host);

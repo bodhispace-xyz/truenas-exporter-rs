@@ -16,8 +16,10 @@ pub struct TrueNasConfig {
     #[serde(default = "default_use_tls")]
     pub use_tls: bool,
     #[serde(default = "default_verify_ssl")]
-    #[allow(dead_code)]
     pub verify_ssl: bool,
+    /// Optional additional trusted PEM CA or self-signed server certificate.
+    #[serde(default)]
+    pub ca_cert_path: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -47,7 +49,7 @@ fn default_port() -> u16 {
 }
 
 fn default_use_tls() -> bool {
-    false
+    true
 }
 
 fn default_verify_ssl() -> bool {
@@ -73,8 +75,49 @@ impl Config {
             .build()
             .context("Failed to build configuration")?;
 
-        config
+        let settings: Self = config
             .try_deserialize()
-            .context("Failed to deserialize configuration")
+            .context("Failed to deserialize configuration")?;
+        // Fail startup before binding if a selected trust configuration is unusable.
+        settings.truenas.tls_connector()?;
+        Ok(settings)
+    }
+}
+
+impl TrueNasConfig {
+    pub(crate) fn tls_connector(&self) -> Result<Option<native_tls::TlsConnector>> {
+        if !self.use_tls {
+            anyhow::ensure!(
+                !self.verify_ssl,
+                "Plain WebSocket transport requires explicit verify_ssl=false"
+            );
+            anyhow::ensure!(
+                self.ca_cert_path.is_none(),
+                "A CA certificate requires verified TLS"
+            );
+            return Ok(None);
+        }
+        let mut builder = native_tls::TlsConnector::builder();
+        builder
+            .danger_accept_invalid_certs(!self.verify_ssl)
+            .danger_accept_invalid_hostnames(!self.verify_ssl);
+        if let Some(path) = &self.ca_cert_path {
+            anyhow::ensure!(self.verify_ssl, "A CA certificate requires verify_ssl=true");
+            let pem = std::fs::read(path)
+                .with_context(|| format!("Cannot read TrueNAS CA certificate: {path}"))?;
+            let marker = b"-----BEGIN CERTIFICATE-----";
+            anyhow::ensure!(
+                pem.windows(marker.len()).filter(|w| *w == marker).count() == 1,
+                "TrueNAS CA file must contain exactly one PEM certificate"
+            );
+            let certificate = native_tls::Certificate::from_pem(&pem)
+                .context("Invalid TrueNAS PEM CA certificate")?;
+            builder.add_root_certificate(certificate);
+        }
+        Ok(Some(
+            builder
+                .build()
+                .context("Cannot build TrueNAS TLS connector")?,
+        ))
     }
 }

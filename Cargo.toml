@@ -44,6 +44,10 @@ secrecy = { version = "0.10.3", features = ["serde"] }
 
 [dev-dependencies]
 proptest = "1.5"
+rcgen = "0.14"
+tempfile = "3"
+tokio = { version = "1.48", features = ["io-util"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
 
 [profile.release]
 opt-level = 3

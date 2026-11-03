@@ -10,8 +10,10 @@ api_key = "API_KEY"
 # Use TLS/SSL for WebSocket connection (REQUIRED for API key auth!)
 use_tls = true
 
-# Verify SSL certificates (set to false for self-signed certs)
-verify_ssl = false
+# Verify the NAS certificate and hostname. Use ca_cert_path for a private CA.
+verify_ssl = true
+# Optional single trusted PEM CA or self-signed server certificate:
+# ca_cert_path = "/etc/truenas-exporter/truenas-ca.pem"
 
 [server]
 # Address to bind the metrics server
