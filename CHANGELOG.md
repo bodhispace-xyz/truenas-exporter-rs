@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://github.com/bodhispace-xyz/truenas-exporter-rs/compare/truenas-exporter-rs-v0.5.10...truenas-exporter-rs-v0.6.0) (2026-11-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* **security:** omitted use_tls now enables TLS. Plain WebSocket requires both use_tls=false and verify_ssl=false. Direct TrueNasConfig literals require ca_cert_path. Private certificates should use ca_cert_path with verification enabled.
+
+### Bug Fixes
+
+* **security:** preserve listener settings and verify NAS TLS ([218e8e6](https://github.com/bodhispace-xyz/truenas-exporter-rs/commit/218e8e62cc8eba890d24e6cd11f388e2b87e89a3))
+
 ## [0.5.10](https://github.com/bodhispace-xyz/truenas-exporter-rs/compare/truenas-exporter-rs-v0.5.9...truenas-exporter-rs-v0.5.10) (2026-11-03)
 
 

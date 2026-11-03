@@ -1900,7 +1900,7 @@ dependencies = [
 
 [[package]]
 name = "truenas-exporter"
-version = "0.5.10"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "axum",
