@@ -135,11 +135,15 @@ Only maintainers create release PRs:
 1. **Feature Collection**: Multiple features merged to `develop`
 2. **Testing**: Thorough testing on `develop` branch
 3. **Release PR**: Maintainer creates PR from `develop` → `main`
-4. **Version Bump**: Update version in `Cargo.toml`
-5. **Changelog**: Update `CHANGELOG.md`
-6. **Merge**: After approval, merge to `main`
-7. **Tag**: Create version tag (e.g., `v0.2.0`)
-8. **Release**: GitHub Actions builds and publishes artifacts
+4. **Merge**: After approval, merge to `main`
+5. **Version and Changelog**: Release Please opens a version/changelog PR on `main`
+6. **Review**: Approve workflow runs if prompted. If no CI run exists, close and
+   reopen the PR as a maintainer. Wait for all seven jobs on the latest bot update,
+   then approve the generated release PR
+7. **Release**: Merge that PR; Release Please creates its tag and calls the publisher
+8. **Verify**: Check the archive checksum and published container revision
+
+See [Releasing](docs/RELEASING.md) for image tags and repair instructions.
 
 ## Development Setup
 
