@@ -46,7 +46,7 @@ A robust Prometheus metrics exporter for TrueNAS Scale 25.x and newer, written i
    
    # Security
    TRUENAS_EXPORTER__TRUENAS__USE_TLS=true
-   TRUENAS_EXPORTER__TRUENAS__VERIFY_SSL=false
+   TRUENAS_EXPORTER__TRUENAS__VERIFY_SSL=true
    
    # Logging
    RUST_LOG=info
@@ -73,7 +73,8 @@ A robust Prometheus metrics exporter for TrueNAS Scale 25.x and newer, written i
 host = "YOUR_TRUENAS_IP:443"
 api_key = "your-api-key-here"
 use_tls = true
-verify_ssl = false  # Set to false for self-signed certs
+verify_ssl = true
+# ca_cert_path = "/etc/truenas-exporter/truenas-ca.pem"  # Optional trusted PEM certificate
 
 [server]
 addr = "0.0.0.0"
@@ -84,6 +85,69 @@ scrape_interval_seconds = 60
 collect_pool_metrics = true
 collect_system_metrics = true
 ```
+
+### Listener configuration precedence
+
+The exporter keeps the address and port loaded from TOML or the documented
+`TRUENAS_EXPORTER__SERVER__ADDR` / `TRUENAS_EXPORTER__SERVER__PORT` variables.
+Only an explicit `--addr` / `--port` or the compatibility variables
+`EXPORTER_ADDR` / `EXPORTER_PORT` override them. CLI arguments take precedence over
+their compatibility variables. The defaults remain `0.0.0.0:9100` when no loaded
+setting or explicit override supplies a value.
+
+The process loads `.env` before reading CLI environment aliases. Existing process
+variables take precedence over values in `.env`.
+
+### Private and self-signed certificates
+
+TLS and certificate/hostname verification are enabled by default. For a private CA
+or self-signed TrueNAS certificate, obtain the public PEM certificate through a
+trusted administration channel and verify its fingerprint. Keep verification enabled:
+
+```toml
+[truenas]
+host = "truenas.example.com:443"
+api_key = "your-api-key-here"
+use_tls = true
+verify_ssl = true
+ca_cert_path = "/etc/truenas-exporter/truenas-ca.pem"
+```
+
+Or set `TRUENAS_EXPORTER__TRUENAS__CA_CERT_PATH` to that path. The file must contain
+exactly one PEM CA or self-signed server certificate. For a certificate chain,
+configure its trusted CA here and ensure TrueNAS serves any required intermediate
+certificates. The hostname in `host` must match the certificate's subject alternative
+names; trusting a CA does not disable hostname checks.
+
+For Docker Compose, mount the public certificate read-only and configure its
+container path:
+
+```yaml
+volumes:
+  - ./truenas-ca.pem:/etc/truenas-exporter/truenas-ca.pem:ro
+environment:
+  TRUENAS_EXPORTER__TRUENAS__USE_TLS: "true"
+  TRUENAS_EXPORTER__TRUENAS__VERIFY_SSL: "true"
+  TRUENAS_EXPORTER__TRUENAS__CA_CERT_PATH: /etc/truenas-exporter/truenas-ca.pem
+```
+
+Missing, malformed, empty or multiple-certificate CA files fail startup. Certificate
+failures do not fall back to insecure TLS. A CA path combined with disabled TLS or
+verification is rejected, so a configured trust certificate cannot be silently ignored.
+
+For temporary testing only, `verify_ssl = false` explicitly disables peer
+verification and emits a warning. Plain WebSocket transport additionally requires
+`use_tls = false`; both insecure settings must be explicit. Remove `ca_cert_path`
+when opting out. These settings expose API-key credentials to peer impersonation;
+plain WebSocket also exposes them without encryption.
+
+**Upgrade note:** configurations that omitted `use_tls` now use TLS. Private or
+self-signed installations should configure their trusted certificate before upgrading.
+Existing explicit `verify_ssl = false` values remain an insecure opt-out; update them
+to `true` to enable verification. Direct Rust `TrueNasConfig` literals need the new
+`ca_cert_path` field (`None` for normal system certificate trust). Configured listener
+addresses and ports are now respected instead of being replaced by CLI defaults.
+Metric names, labels and NAS query methods are unchanged.
 
 ## Authentication & Connection Details
 

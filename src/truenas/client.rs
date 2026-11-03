@@ -21,7 +21,8 @@
 //!     host: "truenas.local:443".to_string(),
 //!     api_key: SecretString::from("your-api-key"),
 //!     use_tls: true,
-//!     verify_ssl: false,
+//!     verify_ssl: true,
+//!     ca_cert_path: None,
 //! };
 //!
 //! let client = TrueNasClient::new(config);
@@ -102,7 +103,8 @@ impl TrueNasClient {
     /// #     host: "truenas.local:443".to_string(),
     /// #     api_key: SecretString::from("key"),
     /// #     use_tls: true,
-    /// #     verify_ssl: false,
+    /// #     verify_ssl: true,
+    /// #     ca_cert_path: None,
     /// # };
     /// let client = TrueNasClient::new(config);
     /// let pools = client.query_pools().await?;

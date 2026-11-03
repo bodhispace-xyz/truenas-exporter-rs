@@ -20,21 +20,11 @@ fn test_default_server_config() {
 
 #[test]
 fn test_truenas_config_defaults_via_serde() {
-    // Given: TrueNasConfig struct uses serde defaults
-    // When: Checking the structure (not testing actual deserialization)
-    // Then: Defaults are defined via functions
-    // This test verifies the struct exists and can be constructed
-    use secrecy::SecretString;
-
-    let config = TrueNasConfig {
-        host: String::new(),
-        api_key: SecretString::new(String::new().into()),
-        use_tls: false,
-        verify_ssl: true,
-    };
-
-    // Then: Struct should be correctly defined and constructible
-    assert!(!config.use_tls);
+    let config: TrueNasConfig = serde_json::from_value(serde_json::json!({
+        "host": "localhost:443", "api_key": "dummy"
+    }))
+    .unwrap();
+    assert!(config.use_tls, "omitted transport setting must select TLS");
     assert!(config.verify_ssl);
 }
 
@@ -65,8 +55,9 @@ fn test_config_structs_have_sensible_defaults() {
     let truenas = TrueNasConfig {
         host: String::new(),
         api_key: SecretString::new(String::new().into()),
-        use_tls: false,
+        use_tls: true,
         verify_ssl: true,
+        ca_cert_path: None,
     };
     let metrics = MetricsConfig {
         scrape_interval_seconds: 60,
@@ -115,4 +106,20 @@ fn test_metrics_config_construction() {
     assert_eq!(config.scrape_interval_seconds, 30);
     assert!(config.collect_pool_metrics);
     assert!(!config.collect_system_metrics);
+}
+
+#[test]
+fn distributed_config_enables_verified_tls() {
+    let config: truenas_exporter::config::Config = config::Config::builder()
+        .add_source(config::File::from_str(
+            include_str!("../config/Default.toml"),
+            config::FileFormat::Toml,
+        ))
+        .build()
+        .unwrap()
+        .try_deserialize()
+        .unwrap();
+    assert!(config.truenas.use_tls);
+    assert!(config.truenas.verify_ssl);
+    assert!(config.truenas.ca_cert_path.is_none());
 }

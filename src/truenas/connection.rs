@@ -89,14 +89,14 @@ impl ConnectionManager {
         let url = self.websocket_url();
         debug!("Connecting to {}", url);
 
-        let (ws_stream, _) = if self.config.use_tls && !self.config.verify_ssl {
-            // Custom TLS connector for self-signed certs
-            let connector = native_tls::TlsConnector::builder()
-                .danger_accept_invalid_certs(true)
-                .danger_accept_invalid_hostnames(true)
-                .build()
-                .map_err(|e| ExporterError::Config(e.to_string()))?;
-
+        let connector = self
+            .config
+            .tls_connector()
+            .map_err(|error| ExporterError::Config(format!("{error:#}")))?;
+        if !self.config.use_tls || !self.config.verify_ssl {
+            warn!("TrueNAS peer verification is disabled; API-key credentials are not protected against peer impersonation");
+        }
+        let (ws_stream, _) = if let Some(connector) = connector {
             let connector = tokio_tungstenite::Connector::NativeTls(connector);
             tokio_tungstenite::connect_async_tls_with_config(&url, None, false, Some(connector))
                 .await

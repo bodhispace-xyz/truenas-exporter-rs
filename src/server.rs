@@ -74,8 +74,9 @@ pub async fn start(config: Config) -> anyhow::Result<()> {
     let addr = format!("{}:{}", config.server.addr, config.server.port);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
 
-    info!("Metrics server listening on {}", addr);
-    info!("Metrics available at http://{}/metrics", addr);
+    let bound_addr = listener.local_addr()?;
+    info!("Metrics server listening on {}", bound_addr);
+    info!("Metrics available at http://{}/metrics", bound_addr);
 
     axum::serve(listener, app).await?;
 
